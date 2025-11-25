@@ -1,11 +1,6 @@
 # Elastic AI Agent Builder Demo
 
-This repo will help you build a local demo of semantic search with RAG (retrieval augmented generation) using the Elastic stack and Streamlit.<br/>
-For the content, we will crawl the Elastic Labs blog posts to have some data to pass as context to the LLM.
-
-This generative AI demo has been adapted from Jeff's excellent blog posts (see refs below) with a few changes:
-* I wanted to run everything locally, so the Elastic stack and the LLM are local,
-* I wanted to have multilingual support, so the demo uses the e5.small embedding model (instead of Elastic's default ELSER) to support multilingual search. The examples will be in French.
+This repo will help you build a local demo of *Elastic AI Agent Builder* using the Elastic stack, a local LLM (with multilingual support!) and Streamlit to power the UI. Ambitous, right!?
 
 Note: this is for demo purpose only! This deployment is not secure, so do not use it in production or with confidential data!
 
@@ -18,12 +13,10 @@ This demo has been tested on Elastic v9.2.1
 
 ## Refs
 
-Inspiré de https://www.elastic.co/search-labs/blog/semantic-search-open-crawler
-
-This demo uses:
-* Elastic start-local ([ref](https://github.com/elastic/start-local)) that we will modify to add an enterprise search node,
-* The first RAG demo ([blog post](https://www.elastic.co/search-labs/blog/chatgpt-elasticsearch-openai-meets-private-data) and [github repo](https://github.com/jeffvestal/ElasticDocs_GPT)) and the second updated one ([blog post](https://www.elastic.co/search-labs/blog/chatgpt-elasticsearch-rag-enhancements) and [github repo](https://github.com/jeffvestal/rag-really-tied-the-app-together)) from my colleague Jeff Vestal,
-* A local LLM demo ([ref](https://github.com/fred-maussion/demo_local_ia_assistant)) based on ollama from my colleague Frédéric Maussion.
+This demo was inspired by:
+* Elastic start-local ([ref](https://github.com/elastic/start-local)) that will spawn Elastic+Kibana locally,
+* A local LLM demo ([ref](https://github.com/fred-maussion/demo_local_ia_assistant)) based on ollama from my colleague Frédéric Maussion,
+* The semantic search using the open crawler ([blog post](https://www.elastic.co/search-labs/blog/semantic-search-open-crawler) from my colleague Jeff Vestal.
 
 
 # Setup pre-requisites
@@ -46,13 +39,7 @@ Run this in your terminal:
 curl -fsSL https://elastic.co/start-local | sh -s -- -v 9.2.1
 ```
 
-Do capture the output of the script, specially the elastic password that you will use to login to Kibana.<br/>
-Also record the API key that the crawler will use to write docs (without changing the ES_HOST):
-```sh
-export ES_HOST="http://host.docker.internal"
-export ES_PORT="9200"
-export ES_API_KEY="dE9NM3Rab0JoMHJSekVKR3hleWdFUQ=="
-```
+Do capture the output of the script, specially the elastic password that you will use to login to Kibana, and also the API key that you may use to also connect to Elasticsearch.
 
 
 ## Setup a local LLM
@@ -280,19 +267,39 @@ You should get something like this:
 </p>
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Play with Elastic docs (TODO)
+
 
 ## Crawl
 
+Get the crawler:
 ```sh
 git clone https://github.com/elastic/crawler
 cd crawler
+export ES_HOST="http://host.docker.internal"
+export ES_PORT="9200"
+export ES_API_KEY="dE9NM3Rab0JoMHJSekVKR3hleWdFUQ=="
 export ES_OUTPUT_INDEX="elastic-docs"
 export TARGET_DOMAIN="https://www.elastic.co"
 export TARGET_PATH="/docs/reference"
 ```
 
-Then:
+Create crawler config:
 ```sh
 cat > crawl-config.yml << EOF
 # target
@@ -341,11 +348,10 @@ docker run -v "$(pwd)":/config -it docker.elastic.co/integrations/crawler:latest
 
 FROM elastic-docs
 | WHERE MATCH(title,?tags) OR MATCH(headings,?tags)
-| EVAL st = score(match(title,?tags)), sh = score(match(headings,?tags))
-| KEEP title,body,headings,url,st,sh
-| SORT st DESC
+| KEEP title,body,headings,url
 | LIMIT 10
 
+(sorting by match score is coming, not yet available in 9.2)
 
 ## Agent search docs
 
@@ -389,6 +395,13 @@ Ton objectif principal est de fournir des réponses claires, concises et précis
 - Toujours **citer le document** d’où provient la réponse en utilisant le style de citation académique en ligne `[]`, avec la position.
 - Utiliser le **format Markdown** pour les exemples de code.
 ```
+
+
+
+
+
+
+
 
 # Adding a chat UI
 
