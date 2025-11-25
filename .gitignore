@@ -1,0 +1,4 @@
+elastic-start-local
+crawler
+creds.txt
+*.log
