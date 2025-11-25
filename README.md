@@ -215,7 +215,9 @@ Enter:
 Then scroll back up and click on the second tab "Tools".<br/>
 Here, you may leave the 4 pre-selected tools that will let the agent query Elasticsearch, and select the 2 tools we created. Finally, click "Save" in the bottom bar.
 
-## Chat time!
+# Chat time!
+
+## Using Kibana UI
 
 When you hover the "Logs investigator" line, you can click the little "chat" icon to start a conversation. Alternatively, you may go back to [Agent Builder](http://localhost:5601/app/agent_builder), make sure the "Logs investigator" agent is selected and start a conversation.
 
@@ -238,6 +240,51 @@ You should get something like this:
 </p>
 
 
+## Calling Kibana API
+
+We will play with [Kibana API](https://www.elastic.co/docs/api/doc/kibana/group/endpoint-agent-builder) to be able to build 
+
+## Using an MCP client
+
+Kibana ships with an integrated MCP server (see [doc](https://www.elastic.co/docs/solutions/search/agent-builder/mcp-server)) that exposes the tools we created earlier!
+
+At the top right of the [Tools page](http://localhost:5601/app/agent_builder/tools), you will be able to copy the MCP server URL. If you used the default space, here it is: http://localhost:5601/api/agent_builder/mcp
+
+Let's start with Claude Desktop.<br/>
+Download it and install it on your computer. A free account will let you test a few requests using Sonnet LLM.<br/>
+Next, open the settings, go to the "developer" settings. Click "Modify configuration", which will open the folder where the `claude_desktop_config.json` file is located. Edit this file and add the MCP server (with your own API key of course):
+```json
+{
+  "mcpServers": {
+    "elastic-agent-builder": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://localhost:5601/api/agent_builder/mcp",
+        "--header",
+        "Authorization:ApiKey dE9NM3Rab0Jyd3dRa3FnRzJzZUg6TmdhdGJmRWZoMHJSekVKR3hleWdFUQ=="
+      ]
+    }
+  }
+}
+```
+
+Save the file and close it. Possibly need to restart Claude.<br/>
+Back to Claude settings, in the "Connectors" menu, you should see the "elastic-agent-builder" connector. Click on "Configure" to view the available tools, including the ones we created. Close the settings page.
+
+Now open a new conversation and type the same question we asked earlier: `Peux tu lister les IP de mes 3 plus gros clients de mon site Web (qui ont fait le plus de requêtes) ?`
+
+First time, you will be asked to approve the use of the tool. You may "Always approve", as illustrated below:
+
+<p align="center">
+<img src="https://github.com/blookot/agent-builder-demo/blob/main/img/claude-approve.png" width="80%" alt="Approve on Claude"/>
+</p>
+
+You should get something like this, which is the same answer we got earlier in the Agent Builder chat app in Kibana:
+
+<p align="center">
+<img src="https://github.com/blookot/agent-builder-demo/blob/main/img/claude.png" width="80%" alt="Claude desktop"/>
+</p>
 
 
 
@@ -262,16 +309,16 @@ Get the crawler:
 ```sh
 git clone https://github.com/elastic/crawler
 cd crawler
+```
+
+Create crawler config:
+```sh
 export ES_HOST="http://host.docker.internal"
 export ES_PORT="9200"
 export ES_API_KEY="dE9NM3Rab0JoMHJSekVKR3hleWdFUQ=="
 export ES_OUTPUT_INDEX="elastic-docs"
 export TARGET_DOMAIN="https://www.elastic.co"
 export TARGET_PATH="/docs/reference"
-```
-
-Create crawler config:
-```sh
 cat > crawl-config.yml << EOF
 # target
 domains:
@@ -326,50 +373,7 @@ FROM elastic-docs
 
 ## Agent search docs
 
-```
-Tu es un assistant utile et compétent conçu pour aider les utilisateurs de la Stack Elastic à interroger la documentation technique du produit. 
-Ton objectif principal est de fournir des réponses claires, concises et précises, basées sur des documents sémantiquement pertinents récupérés via le crawler depuis le site de la documentation Elastic.
-**Parmi les 10 articles de la documentation, sélectionne l'article le plus pertinent en te basant sur le contenu de l'article (champs 'title' et 'body')**
-**Tu dois répondre en Français uniquement.**
-
-### Directives :
-
-#### Public cible :
-- Supposer que l'utilisateur peut avoir n'importe quel niveau d'expérience, mais privilégier une orientation technique dans les explications.
-- Éviter le jargon trop complexe, sauf s’il est courant dans le contexte d’Elasticsearch, de la Recherche, de l’Observabilité ou de la Sécurité.
-
-#### Structure des réponses :
-- **Clarté** : Les réponses doivent être claires et concises, sans verbiage inutile.
-- **Concision** : Fournir l’information de la manière la plus directe possible, en utilisant des puces si pertinent.
-- **Mise en forme** : Utiliser la mise en forme Markdown pour :
-  - Les listes à puces afin d’organiser l’information
-  - Les blocs de code pour tout extrait de code, configuration ou commande
-- **Pertinence** : L’information fournie doit être directement liée à la requête de l’utilisateur, en privilégiant la précision.
-
-#### Contenu :
-- **Profondeur technique** : Offrir une profondeur technique suffisante tout en restant accessible. Adapter la complexité en fonction du niveau de connaissance apparent de l'utilisateur, déduit de sa requête.
-- **Exemples** : Lorsque c’est approprié, fournir des exemples ou des scénarios pour clarifier les concepts ou illustrer des cas d’usage.
-- **Liens vers la documentation** : Toujours reprendre le lien (champ 'url') et le mettre en référence de la réponse. Lorsque cela est pertinent, proposer d'autres ressources supplémentaires mais exclusivement depuis le site *elastic.co*.
-
-#### Ton et style :
-- Maintenir un ton **professionnel** tout en étant **accessible**.
-- Encourager la curiosité en étant **bienveillant** et **patient** avec toutes les requêtes, peu importe leur complexité.
-
-### Exemples de requêtes :
-- "Comment optimiser mon cluster Elasticsearch pour le traitement de données à grande échelle ?"
-- "Quelles sont les bonnes pratiques pour implémenter l'observabilité dans une architecture microservices ?"
-- "Comment sécuriser les données sensibles dans Elasticsearch ?"
-
-### Règles :
-- Répondre aux questions de manière **véridique** et **factuelle**, en se basant uniquement sur le contexte présenté.
-- Si tu ne connais pas la réponse, **dis-le simplement**. Ne pas inventer de réponse.
-- Toujours **citer le document** d’où provient la réponse en utilisant le style de citation académique en ligne `[]`, avec la position.
-- Utiliser le **format Markdown** pour les exemples de code.
-```
-
-
-
-
+[ref](https://github.com/blookot/agent-builder-demo/blob/main/docs-agent-instructions.txt)
 
 
 
