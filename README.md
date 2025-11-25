@@ -16,7 +16,7 @@ This demo has been tested on Elastic v9.2.1
 This demo was inspired by:
 * Elastic start-local ([ref](https://github.com/elastic/start-local)) that will spawn Elastic+Kibana locally,
 * A local LLM demo ([ref](https://github.com/fred-maussion/demo_local_ia_assistant)) based on ollama from my colleague Frédéric Maussion,
-* The semantic search using the open crawler ([blog post](https://www.elastic.co/search-labs/blog/semantic-search-open-crawler) from my colleague Jeff Vestal.
+* The semantic search using the open crawler ([blog post](https://www.elastic.co/search-labs/blog/semantic-search-open-crawler)) from my colleague Jeff Vestal.
 
 
 # Setup pre-requisites
@@ -48,7 +48,7 @@ Download & install [ollama](https://github.com/ollama/ollama) for your platform.
 Get the model you want, as long as it has the 'tools' tag (see the available models from the [ollama library](https://ollama.com/library?sort=popular)).
 
 I personnaly used [llama3.2](https://ollama.com/library/llama3.2) that worked great, even in French!<br/>
-I also tested qwen3 and mistral that sometimes triggered errors. Be aware that, at this stage (v9.2), we recommend [specific models](https://www.elastic.co/docs/solutions/search/agent-builder/models#recommended-models) and the `` I was getting with mistral illustrate [the issues you may](https://www.elastic.co/docs/solutions/search/agent-builder/limitations-known-issues#incompatible-llms) face with incompatible LLMs...
+I also tested qwen3 and mistral that sometimes triggered errors. Be aware that, at this stage (v9.2), we recommend [specific models](https://www.elastic.co/docs/solutions/search/agent-builder/models#recommended-models) and the `Error executing agent: No tool calls found in the response.` I was getting with mistral illustrate [the issues you may face](https://www.elastic.co/docs/solutions/search/agent-builder/limitations-known-issues#incompatible-llms) with incompatible LLMs...
 
 Here is how to setup llama3.2:
 ```sh
@@ -75,30 +75,6 @@ curl http://localhost:11434/v1/chat/completions \
     }'
 ```
 
-
-# Get data in!
-
-Let's [open Kibana](http://localhost:5601/) and connect with the elastic account (and the password captured earlier), then create our inference endpoint, the web crawler and the LLM connector to play.
-
-## Sample dataset
-
-We will first load a sample dataset of web logs.<br/>
-When [opening Kibana](http://localhost:5601/), you will see a Search solutions view. We first need to switch to the classic view to load the dataset. To do so, click on the bottom left icon (gear), then down the menu to "Spaces", and edit the "Default" line to select the Solutions view "Classic". Finally, "Apply changes" at the bottom and update the space.
-
-_Tip_: instead, you could have opened the dev tools and run:
-```json
-PUT kbn://api/spaces/space/default
-{
-    "id": "default",
-    "name": "Default",
-    "solution": "classic" 
-}
-```
-And reloaded the page.
-
-Now, click the Elastic logo at the top left of the screen, "Try sample data", expand "Other sample datasets" and click the "Add data" for the "Sample web logs" tile. Wait 5-10 seconds. Then "View data" and switch do "Discover" to explore this dataset.
-
-
 ## Create the LLM connector
 
 Connectors are handled by Kibana, which in our case, is executed inside a container and needs to interact with ollama, executed on the host. For Kibana to reach ollama, we will need to use the following host: `host.docker.internal`<br/>
@@ -124,9 +100,33 @@ Click the 'Save & Test' button, and on the 'Test' tab, click the 'Run' button to
 Then 'Close' at the buttom of the pane.
 
 
+# Get data in!
+
+Let's [open Kibana](http://localhost:5601/) and connect with the elastic account (and the password captured earlier), then create our inference endpoint, the web crawler and the LLM connector to play.
+
+## Sample dataset
+
+We will first load a sample dataset of web logs.<br/>
+When [opening Kibana](http://localhost:5601/), you will see a Search solutions view. We first need to switch to the classic view to load the dataset. To do so, click on the bottom left icon (gear), then down the menu to "Spaces", and edit the "Default" line to select the Solutions view "Classic". Finally, "Apply changes" at the bottom and update the space.
+
+_Tip_: instead, you can open the dev tools and run:
+```json
+PUT kbn://api/spaces/space/default
+{
+    "id": "default",
+    "name": "Default",
+    "solution": "classic" 
+}
+```
+And reload the page. Voilà ;-)
+
+Now, click the Elastic logo at the top left of the screen, "Try sample data", expand "Other sample datasets" and click the "Add data" for the "Sample web logs" tile. Wait 5-10 seconds. Then "View data" and switch do "Discover" to explore this dataset.
+
+
+
 # Configure the Agent Builder
 
-We will create 
+We will create an agent to explore and analyze the content of these web logs.
 
 ## Activate the Agent Builder (tech preview)
 
@@ -136,6 +136,8 @@ Go to the [Kibana advanced settings](http://localhost:5601/app/management/kibana
 
 Now, go to the [Agents app](http://localhost:5601/app/agent_builder) (in the menu under Elasticsearch in the classic view).
 The agents rely on Tools to run. So we will setup a couple of tools and then configure our agent.
+
+_Tip_: I heard there was a secret Kibana API call to modify advanced settings. Anyone having it, please open an issue!
 
 ## Setup the tools
 
@@ -189,8 +191,12 @@ Finally click "Save" at the bottom right of the page.
 
 ### error logs
 
+**TODO**
+
+```sql
 FROM kibana_sample_data_logs
 | WHERE TO_INTEGER(response)>=100 AND TO_INTEGER(response)<400 AND MATCH(request, "apm")
+```
 
 
 ## Configure the agent
@@ -199,50 +205,15 @@ Now that we have our tools, we will configure our agent that will rely on these 
 
 Go back to the [Agents app](http://localhost:5601/app/agent_builder), click "Agents" at the bottow left and click "New agent".
 
-Enter `logs-agent` as Agent ID, and the following instructions to have it run in French:
-```
-Tu es un assistant utile et compétent conçu pour aider les utilisateurs de la Stack Elastic à investiguer dans les logs web contenus dans l'index 'kibana_sample_data_logs'. 
-Ton objectif principal est de fournir des réponses claires, concises et précises.
-**Tu dois répondre en Français uniquement.**
+Enter:
+* Agent ID: `logs-agent`
+* Custom instructions: copy the instructions [provided here](https://github.com/blookot/agent-builder-demo/blob/main/logs-agent-instructions.txt) to have it run in French
+* Labels: `logs`
+* Display name: something creative like `Logs investigator`
+* Display description: `Investigating in the logs sample dataset.`
 
-### Directives :
-
-#### Public cible :
-- Supposer que l'utilisateur peut avoir n'importe quel niveau d'expérience, mais privilégier une orientation technique dans les explications.
-- Éviter le jargon trop complexe, sauf s’il est courant dans le contexte d’Elasticsearch, de la Recherche, de l’Observabilité ou de la Sécurité.
-
-#### Structure des réponses :
-- **Clarté** : Les réponses doivent être claires et concises, sans verbiage inutile.
-- **Concision** : Fournir l’information de la manière la plus directe possible, en utilisant des puces si pertinent.
-- **Mise en forme** : Utiliser la mise en forme Markdown pour :
-  - Les listes à puces afin d’organiser l’information
-  - Les blocs de code pour tout extrait de code, configuration ou commande
-- **Pertinence** : L’information fournie doit être directement liée à la requête de l’utilisateur, en privilégiant la précision.
-
-#### Contenu :
-- **Profondeur technique** : Offrir une profondeur technique suffisante tout en restant accessible. Adapter la complexité en fonction du niveau de connaissance apparent de l'utilisateur, déduit de sa requête.
-- **Exemples** : Lorsque c’est approprié, fournir des exemples ou des scénarios pour clarifier les concepts ou illustrer des cas d’usage.
-- **Liens vers la documentation** : Toujours reprendre le lien (champ 'url') et le mettre en référence de la réponse. Lorsque cela est pertinent, proposer d'autres ressources supplémentaires mais exclusivement depuis le site *elastic.co*.
-
-#### Ton et style :
-- Maintenir un ton **professionnel** tout en étant **accessible**.
-- Encourager la curiosité en étant **bienveillant** et **patient** avec toutes les requêtes, peu importe leur complexité.
-
-### Exemples de requêtes :
-- "Comment optimiser mon cluster Elasticsearch pour le traitement de données à grande échelle ?"
-- "Quelles sont les bonnes pratiques pour implémenter l'observabilité dans une architecture microservices ?"
-- "Comment sécuriser les données sensibles dans Elasticsearch ?"
-
-### Règles :
-- Répondre aux questions de manière **véridique** et **factuelle**, en se basant uniquement sur le contexte présenté.
-- Si tu ne connais pas la réponse, **dis-le simplement**. Ne pas inventer de réponse.
-- Toujours **citer le document** d’où provient la réponse en utilisant le style de citation académique en ligne `[]`, avec la position.
-- Utiliser le **format Markdown** pour les exemples de code.
-- Répondre **en Français** uniquement !
-```
-
-Enter the `logs` label, a creative Display name like `Logs investigator` and a Display description `Investigating in the logs sample dataset.`.<br/>
-Then scroll back up and click on the second tab "Tools". Here, you may leave the 4 pre-selected tools that will let the agent query Elasticsearch, and select the 2 tools we created. Finally, click "Save" in the bottom bar.
+Then scroll back up and click on the second tab "Tools".<br/>
+Here, you may leave the 4 pre-selected tools that will let the agent query Elasticsearch, and select the 2 tools we created. Finally, click "Save" in the bottom bar.
 
 ## Chat time!
 
