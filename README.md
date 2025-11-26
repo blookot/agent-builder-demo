@@ -1,6 +1,6 @@
 # Elastic AI Agent Builder Demo
 
-This repo will help you build a local demo of *Elastic AI Agent Builder* using the Elastic stack, a local LLM (with multilingual support!) and Streamlit to power the UI. Ambitous, right!?
+This repo will help you build a local demo of **Elastic AI Agent Builder** using the Elastic stack and a local LLM (with multilingual support!), play with MCP clients and Streamlit to power the UI. Ambitous, right!?
 
 Note: this is for demo purpose only! This deployment is not secure, so do not use it in production or with confidential data!
 
@@ -52,8 +52,8 @@ I also tested qwen3 and mistral that sometimes triggered errors. Be aware that, 
 
 Here is how to setup llama3.2:
 ```sh
-ollama pull llama3.2
-ollama create gpt-4o -f Modelfile-llama3.2
+ollama pull qwen3
+ollama create gpt-4o -f Modelfile-qwen3
 ```
 
 Test your new LLM (setting the model to the model you chose of course, mistral in my example):
@@ -61,7 +61,7 @@ Test your new LLM (setting the model to the model you chose of course, mistral i
 curl http://localhost:11434/v1/chat/completions \
     -H "Content-Type: application/json" \
     -d '{
-        "model": "llama3.2",
+        "model": "qwen3",
         "messages": [
             {
                 "role": "system",
@@ -81,20 +81,19 @@ Connectors are handled by Kibana, which in our case, is executed inside a contai
 Note: the connector is expecting an API Key configured to work. Ollama doesn't provide this feature so you can enter a random string and save the connector.
 
 Go to Kibana > Stack Management > Connectors > Create connector > OpenAI<br/>
-(Do not go for the "AI Connector"! Scroll down to select the "OpenAI" tile)
-
-Configuring the connector for Llama3.2 will look like this:
-
-<p align="center">
-<img src="https://github.com/blookot/agent-builder-demo/blob/main/img/llama-connector.png" width="80%" alt="Llama 3.2 config"/>
-</p>
-
-with this setup: 
-* Connector name: `Llama 3.2`
+(Do not go for the "AI Connector"! Scroll down to select the "OpenAI" tile)<br/>
+Configure the connector with this setup: 
+* Connector name: `Qwen3`
 * OpenAI provider: `OpenAI`
 * URL: `http://host.docker.internal:11434/v1/chat/completions`
-* Default model: `llama3.2`
+* Default model: `qwen3`
 * API key: `whatever` (not used, but mandatory)
+
+Which should look like this:
+
+<p align="center">
+<img src="https://github.com/blookot/agent-builder-demo/blob/main/img/qwen3-connector.png" width="80%" alt="Qwen3 config"/>
+</p>
 
 Click the 'Save & Test' button, and on the 'Test' tab, click the 'Run' button to validate the connector is well configured.<br/>
 Then 'Close' at the buttom of the pane.
@@ -244,7 +243,8 @@ You should get something like this:
 
 We will play with [Kibana API](https://www.elastic.co/docs/api/doc/kibana/group/endpoint-agent-builder) to be able to build 
 
-## Using an MCP client
+
+## Using a first MCP client: Claude desktop
 
 Kibana ships with an integrated MCP server (see [doc](https://www.elastic.co/docs/solutions/search/agent-builder/mcp-server)) that exposes the tools we created earlier!
 
@@ -269,6 +269,7 @@ Next, open the settings, go to the "developer" settings. Click "Modify configura
 }
 ```
 
+_Note_: the `npx` only sometimes doesn't work. If you have issues, try adding the full path (check with a `whereis npx`). On my MacOS it is `/opt/homebrew/bin/npx`.<br/>
 Save the file and close it. Possibly need to restart Claude.<br/>
 Back to Claude settings, in the "Connectors" menu, you should see the "elastic-agent-builder" connector. Click on "Configure" to view the available tools, including the ones we created. Close the settings page.
 
@@ -287,6 +288,48 @@ You should get something like this, which is the same answer we got earlier in t
 </p>
 
 
+## Using a second MCP client: Cherry Studio
+
+Because Claude desktop only integrates with Sonnet and is limited in its free version (and doesn't leverage our llama3.2 LLM!!), let's try another MCP client: [Cherry Studio](https://www.cherry-ai.com/)!
+
+First, [download](https://www.cherry-ai.com/download) and install Cherry Studio on your computer.<br/>
+Next, open the settings (gear icon at the bottom left), go to "MCP" in the left menu. Click "Add" and "Quick create" and enter `MCP Elastic local` as Name, leave the `stdio` type, enter `/opt/homebrew/bin/npx` as command and the 4 following lines as arguments:
+```
+mcp-remote
+http://localhost:5601/api/agent_builder/mcp
+--header
+Authorization:ApiKey dE9NM3Rab0Jyd3dRa3FnRzJzZUg6TmdhdGJmRWZoMHJSekVKR3hleWdFUQ==
+```
+
+You should have this MCP configuration:
+
+<p align="center">
+<img src="https://github.com/blookot/agent-builder-demo/blob/main/img/cherry-mcp.png" width="80%" alt="MCP config on Cherry Studio"/>
+</p>
+
+Save and toggle on. If it works, nothing happens!
+
+Then click "Model Provider" in the left menu, search "ollama", select it and configure whatever API key, leave `http://localhost:11434` as host, then click "Manage" and the + on the llama3.2 group.
+
+For the LLM configuration, you should have this:
+
+<p align="center">
+<img src="https://github.com/blookot/agent-builder-demo/blob/main/img/cherry-llm.png" width="80%" alt="LLM config on Cherry Studio"/>
+</p>
+
+You may go back to conversations (the top left icon). In the bottom line of icon, locate the "@" icon and select your "Ollama" LLM. Left of it, click the hammer icon and select your "MCP Elastic local" server, as illustrated below:
+
+<p align="center">
+<img src="https://github.com/blookot/agent-builder-demo/blob/main/img/cherry-chat.png" width="80%" alt="Chat config in Cherry Studio"/>
+</p>
+
+
+Now you're ready to go!<br/>
+Type the same question we asked earlier: `Peux tu lister les IP de mes 3 plus gros clients de mon site Web (qui ont fait le plus de requêtes) ?` and you should get:
+
+<p align="center">
+<img src="https://github.com/blookot/agent-builder-demo/blob/main/img/cherry-req.png" width="80%" alt="Request in Cherry Studio"/>
+</p>
 
 
 
@@ -296,6 +339,9 @@ You should get something like this, which is the same answer we got earlier in t
 
 
 
+
+---
+---
 
 
 
