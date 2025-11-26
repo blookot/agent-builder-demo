@@ -1,7 +1,7 @@
-.gitignore
 .DS_Store
 elastic-start-local
 crawler
 a2a-inspector
 creds.txt
 *.log
+old
