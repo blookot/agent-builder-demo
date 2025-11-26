@@ -16,7 +16,8 @@ This demo has been tested on Elastic v9.2.1
 This demo was inspired by:
 * Elastic start-local ([ref](https://github.com/elastic/start-local)) that will spawn Elastic+Kibana locally,
 * A local LLM demo ([ref](https://github.com/fred-maussion/demo_local_ia_assistant)) based on ollama from my colleague Frédéric Maussion,
-* The semantic search using the open crawler ([blog post](https://www.elastic.co/search-labs/blog/semantic-search-open-crawler)) from my colleague Jeff Vestal.
+* The semantic search using the open crawler ([blog post](https://www.elastic.co/search-labs/blog/semantic-search-open-crawler)) from my colleague Jeff Vestal,
+* The MCP server for Agent Builder [blog post](https://www.elastic.co/search-labs/blog/elastic-mcp-server-agent-builder-tools).
 
 
 # Setup pre-requisites
@@ -39,7 +40,11 @@ Run this in your terminal:
 curl -fsSL https://elastic.co/start-local | sh -s -- -v 9.2.1
 ```
 
-Do capture the output of the script, specially the elastic password that you will use to login to Kibana, and also the API key that you may use to also connect to Elasticsearch.
+Do capture the output of the script, specially the elastic password that you will use to login to Kibana, and also the API key that you may use to also connect to Elasticsearch.<br/>
+Let's record your API key (from the start-local output):
+```sh
+export ES_API_KEY="dE9NM3Rab0Jyd3dRa3FnRzJzZUg6TmdhdGJmRWZoMHJSekVKR3hleWdFUQ=="
+```
 
 
 ## Setup a local LLM
@@ -238,6 +243,12 @@ You should get something like this:
 </p>
 
 
+## Calling Kibana API
+
+We will play with [Kibana API](https://www.elastic.co/docs/api/doc/kibana/group/endpoint-agent-builder) to be able to build up on top of our agent with an external chat (out of Kibana).
+
+
+
 
 ## Using a first MCP client: Claude desktop
 
@@ -327,12 +338,55 @@ Type the same question we asked earlier: `Peux tu lister les IP de mes 3 plus gr
 </p>
 
 
-## Calling Kibana API
 
-We will play with [Kibana API](https://www.elastic.co/docs/api/doc/kibana/group/endpoint-agent-builder) to be able to build up on top of our agent with an external chat (out of Kibana).
+## Agent to agent (A2A)
+
+The Agent-to-Agent (A2A) server (included in Agent Builder) enables external A2A clients to communicate with Elastic Agent Builder agents.<br/>
+However, the [documentation](https://www.elastic.co/docs/solutions/search/agent-builder/a2a-server) and the API calls ([get A2A card](https://www.elastic.co/docs/api/doc/kibana/operation/operation-get-agent-builder-a2a-agentid-json) or [send A2A task](https://www.elastic.co/docs/api/doc/kibana/operation/operation-post-agent-builder-a2a-agentid)) won't help much :-/<br/>
+I rather recommend to read our search labs ([post 1](https://www.elastic.co/search-labs/blog/a2a-protocol-elastic-agent-builder-gemini-enterprise) and [post 2](https://www.elastic.co/search-labs/blog/a2a-protocol-mcp-llm-agent-newsroom-elasticsearch)) that explain how A2A can be achieved. 
+
+Let's first try to fetch the A2A agent card:
+```sh
+curl -X GET -H "Authorization: ApiKey $ES_API_KEY" "http://localhost:5601/api/agent_builder/a2a/logs-agent.json" | jq
+```
+
+Where you should see the agent metadata (including the list of tools).
+
+Then, you may try the [a2a-inspector](https://www.elastic.co/search-labs/blog/a2a-protocol-elastic-agent-builder-gemini-enterprise#test-your-agent-with-the-a2a-inspector):
+```sh
+git clone https://github.com/a2aproject/a2a-inspector
+cd a2a-inspector
+pip install uv
+uv sync
+cd frontend
+npm install
+cd ..
+chmod +x scripts/run.sh
+scripts/run.sh
+```
+
+And open [the UI](http://127.0.0.1:5001) (by default).<br/>
+To configure the connection, fill the URL `http://localhost:5601/api/agent_builder/a2a/logs-agent.json` and set the Authentication as "API Key" with the Header Name `Authorization` and the API Key `ApiKey dE9NM3Rab0Jyd3dRa3FnRzJzZUg6TmdhdGJmRWZoMHJSekVKR3hleWdFUQ==` (with your API key of course), as illustrated below:
+
+<p align="center">
+<img src="https://github.com/blookot/agent-builder-demo/blob/main/img/a2a-config.png" width="80%" alt="A2A inspector configuration"/>
+</p>
+
+When clicking "Connect", you should see the agent card:
+
+<p align="center">
+<img src="https://github.com/blookot/agent-builder-demo/blob/main/img/a2a-agent-card.png" width="80%" alt="A2A agent card"/>
+</p>
+
+At the very bottom of the page, you can enter our traditional `Peux tu lister les IP de mes 3 plus gros clients de mon site Web (qui ont fait le plus de requêtes) ?` question and read our answer:
+
+<p align="center">
+<img src="https://github.com/blookot/agent-builder-demo/blob/main/img/a2a-chat.png" width="80%" alt="A2A chat"/>
+</p>
 
 
 
+Finally, you may start using A2A in your own agent development with the [official SDKs](https://github.com/a2aproject/A2A)!
 
 
 
@@ -362,7 +416,7 @@ Create crawler config:
 ```sh
 export ES_HOST="http://host.docker.internal"
 export ES_PORT="9200"
-export ES_API_KEY="dE9NM3Rab0JoMHJSekVKR3hleWdFUQ=="
+export ES_API_KEY="dE9NM3Rab0Jyd3dRa3FnRzJzZUg6TmdhdGJmRWZoMHJSekVKR3hleWdFUQ=="
 export ES_OUTPUT_INDEX="elastic-docs"
 export TARGET_DOMAIN="https://www.elastic.co"
 export TARGET_PATH="/docs/reference"
