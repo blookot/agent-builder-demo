@@ -45,18 +45,19 @@ Do capture the output of the script, specially the elastic password that you wil
 ## Setup a local LLM
 
 Download & install [ollama](https://github.com/ollama/ollama) for your platform.<br/>
-Get the model you want, as long as it has the 'tools' tag (see the available models from the [ollama library](https://ollama.com/library?sort=popular)).
+Get the model you want, as long as it has the 'tools' and 'thinking' tags (see the available models from the [ollama library](https://ollama.com/library?sort=popular)).
 
-I personnaly used [llama3.2](https://ollama.com/library/llama3.2) that worked great, even in French!<br/>
-I also tested qwen3 and mistral that sometimes triggered errors. Be aware that, at this stage (v9.2), we recommend [specific models](https://www.elastic.co/docs/solutions/search/agent-builder/models#recommended-models) and the `Error executing agent: No tool calls found in the response.` I was getting with mistral illustrate [the issues you may face](https://www.elastic.co/docs/solutions/search/agent-builder/limitations-known-issues#incompatible-llms) with incompatible LLMs...
+I personnaly used [qwen3](https://ollama.com/library/qwen3) that worked great, even in French!<br/>
+I also tested llama3.2 and mistral that sometimes triggered errors. Be aware that, at this stage (v9.2), we recommend [specific models](https://www.elastic.co/docs/solutions/search/agent-builder/models#recommended-models) and the `Error executing agent: No tool calls found in the response.` I was getting with mistral illustrate [the issues you may face](https://www.elastic.co/docs/solutions/search/agent-builder/limitations-known-issues#incompatible-llms) with incompatible LLMs...<br/>
+Besides, these models do not have the reasoning ability (see the 'thinking' tag in ollama models library!) so they struggle leveraging our tools.
 
-Here is how to setup llama3.2:
+Here is how to setup qwen3:
 ```sh
 ollama pull qwen3
 ollama create gpt-4o -f Modelfile-qwen3
 ```
 
-Test your new LLM (setting the model to the model you chose of course, mistral in my example):
+Test your new LLM (setting the model to the model you chose of course, qwen3 in my example):
 ```sh
 curl http://localhost:11434/v1/chat/completions \
     -H "Content-Type: application/json" \
@@ -220,8 +221,7 @@ Here, you may leave the 4 pre-selected tools that will let the agent query Elast
 
 When you hover the "Logs investigator" line, you can click the little "chat" icon to start a conversation. Alternatively, you may go back to [Agent Builder](http://localhost:5601/app/agent_builder), make sure the "Logs investigator" agent is selected and start a conversation.
 
-I first suggest to try this question in French:
-`Peux tu lister les IP de mes 3 plus gros clients de mon site Web (qui ont fait le plus de requêtes) ?`
+I first suggest to try this question in French: `Peux tu lister les IP de mes 3 plus gros clients de mon site Web (qui ont fait le plus de requêtes) ?`<br/>
 You should get something like this:
 
 <p align="center">
@@ -230,18 +230,13 @@ You should get something like this:
 
 
 Now let's try the second tool:
-`Et peux tu me donner plus de détails sur les requêtes qui ont ciblé les pages 'apm' qui ont généré les réponses les plus volumineuses ?`
-
+`Et peux tu me donner plus de détails sur les requêtes qui ont ciblé les pages 'apm' qui ont généré les réponses les plus volumineuses ?`<br/>
 You should get something like this:
 
 <p align="center">
 <img src="https://github.com/blookot/agent-builder-demo/blob/main/img/logs-req2.png" width="80%" alt="Second request on logs"/>
 </p>
 
-
-## Calling Kibana API
-
-We will play with [Kibana API](https://www.elastic.co/docs/api/doc/kibana/group/endpoint-agent-builder) to be able to build 
 
 
 ## Using a first MCP client: Claude desktop
@@ -290,7 +285,7 @@ You should get something like this, which is the same answer we got earlier in t
 
 ## Using a second MCP client: Cherry Studio
 
-Because Claude desktop only integrates with Sonnet and is limited in its free version (and doesn't leverage our llama3.2 LLM!!), let's try another MCP client: [Cherry Studio](https://www.cherry-ai.com/)!
+Because Claude desktop only integrates with Sonnet and is limited in its free version (and doesn't leverage our qwen3 LLM!!), let's try another MCP client: [Cherry Studio](https://www.cherry-ai.com/)!
 
 First, [download](https://www.cherry-ai.com/download) and install Cherry Studio on your computer.<br/>
 Next, open the settings (gear icon at the bottom left), go to "MCP" in the left menu. Click "Add" and "Quick create" and enter `MCP Elastic local` as Name, leave the `stdio` type, enter `/opt/homebrew/bin/npx` as command and the 4 following lines as arguments:
@@ -309,7 +304,7 @@ You should have this MCP configuration:
 
 Save and toggle on. If it works, nothing happens!
 
-Then click "Model Provider" in the left menu, search "ollama", select it and configure whatever API key, leave `http://localhost:11434` as host, then click "Manage" and the + on the llama3.2 group.
+Then click "Model Provider" in the left menu, search "ollama", select it and configure whatever API key, leave `http://localhost:11434` as host, then click "Manage" and the + on the qwen3 group.
 
 For the LLM configuration, you should have this:
 
@@ -330,6 +325,12 @@ Type the same question we asked earlier: `Peux tu lister les IP de mes 3 plus gr
 <p align="center">
 <img src="https://github.com/blookot/agent-builder-demo/blob/main/img/cherry-req.png" width="80%" alt="Request in Cherry Studio"/>
 </p>
+
+
+## Calling Kibana API
+
+We will play with [Kibana API](https://www.elastic.co/docs/api/doc/kibana/group/endpoint-agent-builder) to be able to build up on top of our agent with an external chat (out of Kibana).
+
 
 
 
