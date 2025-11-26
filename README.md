@@ -198,9 +198,15 @@ Finally click "Save" at the bottom right of the page.
 
 **TODO**
 
+You can add a third tool to analyze errors. Here for inspiration:
+
 ```sql
 FROM kibana_sample_data_logs
-| WHERE TO_INTEGER(response)>=100 AND TO_INTEGER(response)<400 AND MATCH(request, "apm")
+| WHERE TO_INTEGER(response)>=400
+| STATS count=COUNT(*) BY geo.dest
+| KEEP geo.dest,count
+| SORT count DESC
+| LIMIT ?nb
 ```
 
 
@@ -247,6 +253,69 @@ You should get something like this:
 
 We will play with [Kibana API](https://www.elastic.co/docs/api/doc/kibana/group/endpoint-agent-builder) to be able to build up on top of our agent with an external chat (out of Kibana).
 
+First, we can try to query our tools, with the following requests (here to be input in Kibana dev tools, but you have the equivalent curl commands).
+
+List tools:
+```
+GET kbn://api/agent_builder/tools
+```
+
+Get the description of our first tool:
+```
+GET kbn://api/agent_builder/tools/logs-count-per-clientip
+```
+
+Execute this tool with the ES|QL parameter (number of client IPs to return):
+```
+POST kbn://api/agent_builder/tools/_execute
+{
+  "tool_id": "logs-count-per-clientip",
+  "tool_params": {
+    "nb": 3
+  }
+}
+```
+
+We see that this basically calls the ES|QL query with the parameters manually set.<br/>
+Let's go one step further by querying agents!
+
+List agents:
+```
+GET kbn://api/agent_builder/agents
+```
+
+Describe our agent:
+```
+GET kbn://api/agent_builder/agents/logs-agent
+```
+
+Describe our agent:
+```
+GET kbn://api/agent_builder/agents/logs-agent
+```
+
+Finally, let's start a conversation!
+```
+POST kbn://api/agent_builder/converse
+{
+  "agent_id": "logs-agent",
+  "input": "Peux tu lister les IP de mes 3 plus gros clients de mon site Web (qui ont fait le plus de requêtes) ?"
+}
+```
+
+And you get your response!
+
+<p align="center">
+<img src="https://github.com/blookot/agent-builder-demo/blob/main/img/api-response.png" width="80%" alt="API response"/>
+</p>
+
+_Note_: Keeping the "conversation_id" from the response will let you continue the conversation further!
+
+_Note 2_: You see the two steps of "reasoning" (aka thinking tag of our qwen3 model) and "tool" call.
+
+<p align="center">
+<img src="https://github.com/blookot/agent-builder-demo/blob/main/img/api-steps.png" width="80%" alt="API steps"/>
+</p>
 
 
 
@@ -258,7 +327,7 @@ At the top right of the [Tools page](http://localhost:5601/app/agent_builder/too
 
 Let's start with Claude Desktop.<br/>
 Download it and install it on your computer. A free account will let you test a few requests using Sonnet LLM.<br/>
-Next, open the settings, go to the "developer" settings. Click "Modify configuration", which will open the folder where the `claude_desktop_config.json` file is located. Edit this file and add the MCP server (with your own API key of course):
+Next, open the settings, go to the "developer" settings. Click "Modify configuration", which will open the folder where the `claude_desktop_config.json` file is located. Edit this file and add the MCP server (with your own API key of course! If you forgot it you can still `echo $ES_API_KEY`):
 ```json
 {
   "mcpServers": {
@@ -345,7 +414,12 @@ The Agent-to-Agent (A2A) server (included in Agent Builder) enables external A2A
 However, the [documentation](https://www.elastic.co/docs/solutions/search/agent-builder/a2a-server) and the API calls ([get A2A card](https://www.elastic.co/docs/api/doc/kibana/operation/operation-get-agent-builder-a2a-agentid-json) or [send A2A task](https://www.elastic.co/docs/api/doc/kibana/operation/operation-post-agent-builder-a2a-agentid)) won't help much :-/<br/>
 I rather recommend to read our search labs ([post 1](https://www.elastic.co/search-labs/blog/a2a-protocol-elastic-agent-builder-gemini-enterprise) and [post 2](https://www.elastic.co/search-labs/blog/a2a-protocol-mcp-llm-agent-newsroom-elasticsearch)) that explain how A2A can be achieved. 
 
-Let's first try to fetch the A2A agent card:
+Let's first try to fetch the A2A agent card, via Kibana dev tools:
+```
+GET kbn://api/agent_builder/a2a/logs-agent.json
+```
+
+or via terminal:
 ```sh
 curl -X GET -H "Authorization: ApiKey $ES_API_KEY" "http://localhost:5601/api/agent_builder/a2a/logs-agent.json" | jq
 ```
@@ -365,7 +439,7 @@ chmod +x scripts/run.sh
 scripts/run.sh
 ```
 
-And open [the UI](http://127.0.0.1:5001) (by default).<br/>
+And open [the a2a inspector UI](http://127.0.0.1:5001).<br/>
 To configure the connection, fill the URL `http://localhost:5601/api/agent_builder/a2a/logs-agent.json` and set the Authentication as "API Key" with the Header Name `Authorization` and the API Key `ApiKey dE9NM3Rab0Jyd3dRa3FnRzJzZUg6TmdhdGJmRWZoMHJSekVKR3hleWdFUQ==` (with your API key of course), as illustrated below:
 
 <p align="center">
