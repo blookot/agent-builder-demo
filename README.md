@@ -1,16 +1,31 @@
 # Elastic AI Agent Builder Demo
 
-This repo will help you build a local demo of **Elastic AI Agent Builder** using the Elastic stack and a local LLM (with multilingual support!), play with MCP clients and Streamlit to power the UI. Ambitous, right!?
+This repo will help you build a local demo of **Elastic AI Agent Builder** using the Elastic stack and a local LLM (with multilingual support!), play with MCP clients and A2A (Agent to Agent). Ambitous, right!?
 
 Note: this is for demo purpose only! This deployment is not secure, so do not use it in production or with confidential data!
 
 
 ## Table of contents
 
+- [Intro](#elastic-ai-agent-builder-demo)
   - [Requirements](#requirements)
   - [References](#refs)
 - [Setup](#setup-pre-requisites)
   - [Clone this repo](#clone-this-repo)
+  - [Start a local Elastic stack](#start-a-local-elastic-stack)
+  - [Setup a local LLM](#setup-a-local-llm)
+  - [Create the LLM connector](#create-the-llm-connector)
+- [Get data in](#get-data-in)
+- [Configure the Agent Builder](#configure-the-agent-builder)
+  - [Activate AB](#activate-the-agent-builder-tech-preview)
+  - [Setup the tools](#setup-the-tools)
+  - [Configure the agent](#configure-the-agent)
+- [Chat time!](#chat-time)
+  - [Using Kibana UI](#using-kibana-ui)
+  - [Calling Kibana API](#calling-kibana-api)
+  - [MCP with Claude Desktop](#using-a-first-mcp-client-claude-desktop)
+  - [MCP with Cherry Studio](#using-a-second-mcp-client-cherry-studio)
+  - [Agent to Agent (A2A)](#agent-to-agent-a2a)
 
 
 
@@ -116,9 +131,7 @@ Then 'Close' at the buttom of the pane.
 
 # Get data in!
 
-Let's [open Kibana](http://localhost:5601/) and connect with the elastic account (and the password captured earlier), then create our inference endpoint, the web crawler and the LLM connector to play.
-
-## Sample dataset
+Let's [open Kibana](http://localhost:5601/) and connect with the elastic account (and the password captured earlier).
 
 We will first load a sample dataset of web logs.<br/>
 When [opening Kibana](http://localhost:5601/), you will see a Search solutions view. We first need to switch to the classic view to load the dataset. To do so, click on the bottom left icon (gear), then down the menu to "Spaces", and edit the "Default" line to select the Solutions view "Classic". Finally, "Apply changes" at the bottom and update the space.
@@ -203,7 +216,7 @@ Scroll down and click "Infer parameters". The variables `request_keyword` and `n
 
 Finally click "Save" at the bottom right of the page.
 
-### error logs
+### Error logs
 
 **TODO**
 
