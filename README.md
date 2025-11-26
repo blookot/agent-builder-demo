@@ -5,6 +5,15 @@ This repo will help you build a local demo of **Elastic AI Agent Builder** using
 Note: this is for demo purpose only! This deployment is not secure, so do not use it in production or with confidential data!
 
 
+## Table of contents
+
+  - [Requirements](#requirements)
+  - [References](#refs)
+- [Setup](#setup-pre-requisites)
+  - [Clone this repo](#clone-this-repo)
+
+
+
 ## Requirements
 
 This demo requires a strong Linux instance with (I would say) 12+ GB RAM. I personnaly run it on a MacBook Pro (48GB RAM)...<br/>
@@ -282,11 +291,6 @@ Let's go one step further by querying agents!
 List agents:
 ```
 GET kbn://api/agent_builder/agents
-```
-
-Describe our agent:
-```
-GET kbn://api/agent_builder/agents/logs-agent
 ```
 
 Describe our agent:
