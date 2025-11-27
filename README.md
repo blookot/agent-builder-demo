@@ -1,6 +1,6 @@
 # Elastic AI Agent Builder Demo
 
-This repo will help you build a local demo of **Elastic AI Agent Builder** using the Elastic stack and a local LLM (with multilingual support!), play with MCP clients and A2A (Agent to Agent). Ambitous, right!?
+This repo will help you build a local demo of **Elastic AI Agent Builder** using a local Elastic stack and a local LLM (with multilingual support!), play with MCP clients and A2A (Agent-to-Agent). Ambitous, right!?
 
 Note: this is for demo purpose only! This deployment is not secure, so do not use it in production or with confidential data!
 
@@ -76,9 +76,9 @@ export ES_API_KEY="dE9NM3Rab0Jyd3dRa3FnRzJzZUg6TmdhdGJmRWZoMHJSekVKR3hleWdFUQ=="
 Download & install [ollama](https://github.com/ollama/ollama) for your platform.<br/>
 Get the model you want, as long as it has the 'tools' and 'thinking' tags (see the available models from the [ollama library](https://ollama.com/library?sort=popular)).
 
-I personnaly used [qwen3](https://ollama.com/library/qwen3) that worked great, even in French!<br/>
-I also tested llama3.2 and mistral that sometimes triggered errors. Be aware that, at this stage (v9.2), we recommend [specific models](https://www.elastic.co/docs/solutions/search/agent-builder/models#recommended-models) and the `Error executing agent: No tool calls found in the response.` I was getting with mistral illustrate [the issues you may face](https://www.elastic.co/docs/solutions/search/agent-builder/limitations-known-issues#incompatible-llms) with incompatible LLMs...<br/>
-Besides, these models do not have the reasoning ability (see the 'thinking' tag in ollama models library!) so they struggle leveraging our tools.
+I personnaly used [qwen3](https://ollama.com/library/qwen3) that worked great, even in French! The default 8b model is about 5GB big to download.<br/>
+I also tested llama3.2 and mistral that sometimes triggered errors. Be aware that, at this stage (v9.2), we recommend [specific models](https://www.elastic.co/docs/solutions/search/agent-builder/models#recommended-models), and the `Error executing agent: No tool calls found in the response.` I was getting with mistral illustrates [the issues you may face](https://www.elastic.co/docs/solutions/search/agent-builder/limitations-known-issues#incompatible-llms) with incompatible LLMs...<br/>
+Besides, these models do not have the reasoning ability (see the 'thinking' tag in ollama models library!) so they struggle to leverage our tools.
 
 Here is how to setup qwen3:
 ```sh
