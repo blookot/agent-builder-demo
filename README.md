@@ -40,8 +40,9 @@ This demo has been tested on Elastic v9.2.1
 This demo was inspired by:
 * Elastic start-local ([ref](https://github.com/elastic/start-local)) that will spawn Elastic+Kibana locally,
 * A local LLM demo ([ref](https://github.com/fred-maussion/demo_local_ia_assistant)) based on ollama from my colleague Frédéric Maussion,
-* The semantic search using the open crawler ([blog post](https://www.elastic.co/search-labs/blog/semantic-search-open-crawler)) from my colleague Jeff Vestal,
 * The MCP server for Agent Builder [blog post](https://www.elastic.co/search-labs/blog/elastic-mcp-server-agent-builder-tools).
+
+Other references are provided in each section.
 
 
 # Setup pre-requisites
