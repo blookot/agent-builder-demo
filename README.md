@@ -179,6 +179,22 @@ The agents rely on Tools to run. So we will setup a couple of tools and then con
 
 _Tip_: I heard there was a secret Kibana API call to modify advanced settings. Anyone having it, please open an issue!
 
+### Optional : Activate Workflow (tech preview)
+
+Elastic has introduce workflow as part of the [keephq acquisition](https://www.elastic.co/blog/elastic-and-keep-join-forces) starting as tech preview as part of the >9.3 release.
+To activate it you need to go to `dev tools` and enter the following command:
+
+```sh
+POST kbn://internal/kibana/settings
+{
+  "changes": {
+    "workflows:ui:enabled": true
+  }
+}
+```
+
+And after a Kibana refresh, you should see the workflow menu appear on the left menu.
+
 ### Use case 1 : Logs Analyst
 
 We are going to create an SRE Analyst agent which is dedicated to analyze the Web Logs we've ingested earlier where we provide dedicated tools that will enhance his capabilities.
@@ -275,6 +291,69 @@ We are going to create a Business Analyst agent which is dedicated to analyze th
 
 No Tools needed, elastic already provided the necessary tools :-)
 
+_Send email Workflow (tech preview)_
+
+If you've activated workflow, you can create a tool that will be able to send email and attach it to your agent. For this, go to `Workflow` -> `Create a new workflow` and paste the following content:
+
+```json
+name: Send email
+enabled: true
+description: Send email
+tags:
+  - workflow
+  - email
+triggers:
+  - type: manual
+
+# Inputs allow you to provide values when running the workflow
+inputs:
+  - name: user_email
+    default: "your_email_address@elastic.co"
+    type: string
+    description: Email Recipient Arrary
+  - name: subject
+    default: Welcome to the elastic workflow!
+    type: string
+    description: Subject of the message
+  - name: body
+    default: Welcome to the elastic workflow!
+    type: string
+    description: Body of the message
+
+steps:
+  - name: email_step
+    type: email
+    connector-id: Elastic-Cloud-SMTP
+    with:
+      to: 
+        - "{{ inputs.user_email }}"
+      subject: "Your Report"
+      message: "{{ inputs.body }}"
+```
+
+And save it.
+
+Now go back to agent, click "Tools" at the bottom left. You will see a predefined list of tools that let you list indices, search and retrieve docs. We will add our own tools.
+
+Click "New tool" and enter:
+
+* Type: `workflow`
+* Tool ID: `default.sent_email`
+* Description: `This workflow helps to send an email. the input are the following, if no input for user_name take your_email@elastic.co
+  - name: user_email
+    type: string
+    description: Email Recipient Arrary
+  - name: subject
+    type: string
+    description: Subject of the message
+  - name: body
+    type: string
+    description: Body of the message`
+* Labels: `business`
+* Configuration: `Send email`
+
+Finally click "Save" at the bottom right of the page.
+
 #### Configure the Business Analyst agent
 
 Now that we have our tools, we will configure our agent that will rely on these tools.
@@ -343,6 +422,10 @@ Now let's try a last search: `Donne moi le top 10 des articles masculin les plus
 You should get something like this:
 
 ![Second request on logs](./img/business-3.png)
+
+(Optional) if you activated workflow, you can repeat the last search and send the summary per email : `Donne moi le top 10 des articles masculin les plus vendus pour les pays suivant : France, Grande-Bretagne, États-Unis. Résume notre conversation et envoi le résumé par email`
+
+You should check out for your inbox right away ;-)
 
 ### Calling Kibana API
 
