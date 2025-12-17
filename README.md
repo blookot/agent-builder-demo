@@ -162,7 +162,7 @@ PUT kbn://api/spaces/space/default
 
 And reload the page. Voilà ;-)
 
-Now, click the Elastic logo at the top left of the screen, "Try sample data", expand "Other sample datasets" and click the "Add data" for the "Sample web logs" tile. Wait 5-10 seconds. Then "View data" and switch do "Discover" to explore this dataset.
+Now, click the Elastic logo at the top left of the screen, "Try sample data", expand "Other sample datasets" and click the "Add data" for the `Sample web logs` tile and the `Sample eCommerce orders` . Wait 5-10 seconds. Then "View data" and switch do "Discover" to explore this dataset.
 
 ## Configure the Agent Builder
 
@@ -179,11 +179,15 @@ The agents rely on Tools to run. So we will setup a couple of tools and then con
 
 _Tip_: I heard there was a secret Kibana API call to modify advanced settings. Anyone having it, please open an issue!
 
-### Setup the tools
+### Use case 1 : Logs Analyst
+
+We are going to create an SRE Analyst agent which is dedicated to analyze the Web Logs we've ingested earlier where we provide dedicated tools that will enhance his capabilities.
+
+#### Setup the tools
 
 Here, we will setup 2 tools as an example: one to list the client IPs that generated the largest amount of logs, and one to analyze the requests targetting specific URLs that generated the biggest responses (volume wise).
 
-#### List client IPs
+##### List client IPs
 
 Click "Tools" at the bottom left. You will see a predefined list of tools that let you list indices, search and retrieve docs. We will add our own tools.
 
@@ -207,7 +211,7 @@ Scroll down and click "Infer parameters". The variable `nb` is automatically fil
 
 Finally click "Save" at the bottom right of the page.
 
-#### Analyze large responses
+##### Analyze large responses
 
 Same, click "New tool", enter:
 
@@ -216,6 +220,7 @@ Same, click "New tool", enter:
 * Labels: `logs`
 
 In the ES|QL query editor, paste the following:
+
 ```sql
 FROM kibana_sample_data_logs
 | WHERE MATCH(request, ?request_keyword)
@@ -229,7 +234,7 @@ Scroll down and click "Infer parameters". The variables `request_keyword` and `n
 
 Finally click "Save" at the bottom right of the page.
 
-#### Error logs
+##### Error logs
 
 **TODO**
 
@@ -244,7 +249,7 @@ FROM kibana_sample_data_logs
 | LIMIT ?nb
 ```
 
-### Configure the agent
+#### Configure the SRE Analyst agent
 
 Now that we have our tools, we will configure our agent that will rely on these tools.
 
@@ -253,7 +258,7 @@ Go back to the [Agents app](http://localhost:5601/app/agent_builder), click "Age
 Enter:
 
 * Agent ID: `logs-agent`
-* Custom instructions: copy the instructions [provided here](https://github.com/blookot/agent-builder-demo/blob/main/logs-agent-instructions.txt) to have it run in French
+* Custom instructions: copy the instructions [provided here](./logs-agent-instructions.txt) to have it run in French
 * Labels: `logs`
 * Display name: something creative like `Logs investigator`
 * Display description: `Investigating in the logs sample dataset.`
@@ -262,9 +267,45 @@ Then scroll back up and click on the second tab "Tools".
 
 Here, you may leave the 4 pre-selected tools that will let the agent query Elasticsearch, and select the 2 tools we created. Finally, click "Save" in the bottom bar.
 
+### Use case 2 : Business Analyst
+
+We are going to create a Business Analyst agent which is dedicated to analyze the eCommerce orders to business audience using out of the box tools provided by Elastic.
+
+#### Setup the tools
+
+No Tools needed, elastic already provided the necessary tools :-)
+
+#### Configure the Business Analyst agent
+
+Now that we have our tools, we will configure our agent that will rely on these tools.
+
+Go back to the [Agents app](http://localhost:5601/app/agent_builder), click "Agents" at the bottow left and click "New agent".
+
+Enter:
+
+* Agent ID: `business_analytics`
+* Custom instructions: copy the instructions [provided here](./business-agent-instructions.txt) to have it run in French
+* Labels: `business`
+* Display name: something creative like `Business Analyst`
+* Display description: `Hello !
+I'm here to help you understand and analyze the data from your eCommerce data. 
+Ask me any type of business questions, I will answer them `
+
+Then scroll back up and click on the second tab "Tools".
+
+Here, in addition to the 4 pre-selected tools that will let the agent query Elasticsearch, select the following ootb tools provided by elastic 
+* `platform.core.generate_esql` 
+* `platform.core.execute_esql`  
+* `platform.core.index_explorer`
+* `platform.core.create_visualization`
+
+Finally, click "Save" in the bottom bar.
+
 ## Chat time!
 
 ### Using Kibana UI
+
+#### Use case 1 : SRE Analyst
 
 When you hover the "Logs investigator" line, you can click the little "chat" icon to start a conversation. Alternatively, you may go back to [Agent Builder](http://localhost:5601/app/agent_builder), make sure the "Logs investigator" agent is selected and start a conversation.
 
@@ -280,6 +321,28 @@ Now let's try the second tool:
 You should get something like this:
 
 ![Second request on logs](./img/logs-req2.png)
+
+#### Use case 2 : Business Analyst
+
+When you hover the "Business Analyst" line, you can click the little "chat" icon to start a conversation. Alternatively, you may go back to [Agent Builder](http://localhost:5601/app/agent_builder), make sure the "Business Analyst" agent is selected and start a conversation.
+
+I first suggest to try this question in French: `Quel est l'article le plus vendu au cours des six derniers mois en Europe ? ?`
+
+You should get something like this:
+
+![First request on logs](./img/business-1.png)
+
+Now let's try a second search: `Quel est notre revenu annuel pour la France sur le secteur global feminin ?`
+
+You should get something like this where a graph is available as we asked to generate visualization if this is relevant:
+
+![Second request on logs](./img/business-2.png)
+
+Now let's try a last search: `Donne moi le top 10 des articles masculin les plus vendus pour les pays suivant : France, Grande-Bretagne, États-Unis.`
+
+You should get something like this:
+
+![Second request on logs](./img/business-3.png)
 
 ### Calling Kibana API
 
