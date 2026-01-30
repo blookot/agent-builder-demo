@@ -266,6 +266,58 @@ FROM kibana_sample_data_logs
 | LIMIT ?nb
 ```
 
+##### Analyze IP reputation & Create Case
+
+_Analyze IP Reputation Workflow (tech preview)_
+
+Note : For this you will to create an API Key on [AbsueIPDB](https://www.abuseipdb.com/) website and copy paste it in the yml provided below.
+
+If you've activated workflow, you can create a tool that will be able to analyze the reputation of the IP and attach it to your agent. For this, go to `Workflow` -> `Create a new workflow` and paste the content [provided here](./logs-agent-workflow-1.yml)
+
+And save it.
+
+Now go back to agent, click "Tools" at the bottom left. You will see a predefined list of tools that let you list indices, search and retrieve docs. We will add our own tools.
+
+Click "New tool" and enter:
+
+* Type: `workflow`
+* Workflow : `IP Reputation Check`
+* Tool ID: `default.ip_reputation`
+* Description: `This workflow helps to provide and IP reputation from AbuseIPDB. The input are the following :
+  - name: ip_address
+    type: string
+    description:
+      The IP address to check for malicious activity and threat intelligence
+      (e.g., 8.8.8.8)
+    required: true`
+* Labels: `logs`
+
+Finally click "Save" at the bottom right of the page.
+
+_Create Case Workflow (tech preview)_
+
+If you've activated workflow, you can create a tool that will be able to create a case and attach it to your agent. For this, go to `Workflow` -> `Create a new workflow` and paste the content [provided here](./logs-agent-workflow-2.yml)
+
+And save it.
+
+Now go back to agent, click "Tools" at the bottom left. You will see a predefined list of tools that let you list indices, search and retrieve docs. We will add our own tools.
+
+Click "New tool" and enter:
+
+* Type: `workflow`
+* Workflow : `createCaseTool`
+* Tool ID: `default.create_case`
+* Description: `This workflow helps to create a case in elastic. The input are the following :
+  - name: caseDescription
+    required: true
+    type: string
+  - name: caseTitle
+    required: true
+    type: string`
+* Labels: `logs`
+
+Finally click "Save" at the bottom right of the page.
+
 #### Configure the SRE Analyst agent
 
 Now that we have our tools, we will configure our agent that will rely on these tools.
@@ -282,7 +334,7 @@ Enter:
 
 Then scroll back up and click on the second tab "Tools".
 
-Here, you may leave the 4 pre-selected tools that will let the agent query Elasticsearch, and select the 2 tools we created. Finally, click "Save" in the bottom bar.
+Here, you may leave the 4 pre-selected tools that will let the agent query Elasticsearch, and select the 2 tools or 4 tools (optional) we created. Finally, click "Save" in the bottom bar.
 
 ### Use case 2 : Business Analyst
 
@@ -294,43 +346,7 @@ No Tools needed, elastic already provided the necessary tools :-)
 
 _Send email Workflow (tech preview)_
 
-If you've activated workflow, you can create a tool that will be able to send email and attach it to your agent. For this, go to `Workflow` -> `Create a new workflow` and paste the following content:
-
-```json
-name: Send email
-enabled: true
-description: Send email
-tags:
-  - workflow
-  - email
-triggers:
-  - type: manual
-
-# Inputs allow you to provide values when running the workflow
-inputs:
-  - name: user_email
-    default: "your_email_address@elastic.co"
-    type: string
-    description: Email Recipient Arrary
-  - name: subject
-    default: Welcome to the elastic workflow!
-    type: string
-    description: Subject of the message
-  - name: body
-    default: Welcome to the elastic workflow!
-    type: string
-    description: Body of the message
-
-steps:
-  - name: email_step
-    type: email
-    connector-id: Elastic-Cloud-SMTP
-    with:
-      to: 
-        - "{{ inputs.user_email }}"
-      subject: "Your Report"
-      message: "{{ inputs.body }}"
-```
+If you've activated workflow, you can create a tool that will be able to send email and attach it to your agent. For this, go to `Workflow` -> `Create a new workflow` and paste the content [provided here](./business-agent-workflow-1.yml)
 
 And save it.
 
@@ -378,6 +394,7 @@ Here, in addition to the 4 pre-selected tools that will let the agent query Elas
 * `platform.core.execute_esql`  
 * `platform.core.index_explorer`
 * `platform.core.create_visualization`
+* `default.sent_email` (optional)
 
 Finally, click "Save" in the bottom bar.
 
@@ -401,6 +418,11 @@ Now let's try the second tool:
 You should get something like this:
 
 ![Second request on logs](./img/logs-req2.png)
+
+Finally ask the agent to bring additional IP context on the gathered information, resume and create the a case containing the information.
+`Vérifie la reputation de ces IP et resume moi cette conversation dans un case afin de commencer une investigation`
+
+![Third request on logs](./img/logs-req3.png)
 
 #### Use case 2 : Business Analyst
 

@@ -1,0 +1,33 @@
+name: Send email
+enabled: true
+description: Send email
+tags:
+  - workflow
+  - email
+triggers:
+  - type: manual
+
+# Inputs allow you to provide values when running the workflow
+inputs:
+  - name: user_email
+    default: "your_email_address@elastic.co"
+    type: string
+    description: Email Recipient Arrary
+  - name: subject
+    default: Welcome to the elastic workflow!
+    type: string
+    description: Subject of the message
+  - name: body
+    default: Welcome to the elastic workflow!
+    type: string
+    description: Body of the message
+
+steps:
+  - name: email_step
+    type: email
+    connector-id: Elastic-Cloud-SMTP
+    with:
+      to: 
+        - "{{ inputs.user_email }}"
+      subject: "Your Report"
+      message: "{{ inputs.body }}"
