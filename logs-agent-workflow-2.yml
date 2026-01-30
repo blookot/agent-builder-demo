@@ -1,0 +1,32 @@
+name: createCaseTool
+description: A tool that let an Agent to create a case
+enabled: true
+triggers:
+  - type: manual
+tags: ["Observability", "AgentTool"]
+inputs:
+  - name: caseDescription
+    required: true
+    type: string
+  - name: caseTitle
+    required: true
+    type: string
+
+steps:
+  - name: kibana_createCase
+    type: kibana.createCase
+    with:
+      connector:
+        fields: null
+        id: none
+        name: none
+        type: .none
+      description: |
+        "{{ inputs.caseDescription }}"
+      owner: observability
+      settings:
+        syncAlerts: false
+      severity: high
+      tags:
+        - Automatic
+      title: "{{ inputs.caseTitle }}"
