@@ -4,7 +4,7 @@ This repo will help you build a local demo of **Elastic AI Agent Builder** using
 
 Note: this is for demo purpose only! This deployment is not secure, so do not use it in production or with confidential data!
 
-The whole demo (on eCommerce orders) has been recorded during our last #100 Elastic meetup and is [available on YouTube](https://www.youtube.com/watch?v=G8JglNgN7eg) in French! Thank you @fred-maussion!
+The whole demo (on eCommerce orders) has been recorded during our last #100 Elastic meetup and is [available on YouTube](https://youtu.be/-6vRZPCzyAs) in French! Thank you @fred-maussion!
 
 ## Table of contents
 
