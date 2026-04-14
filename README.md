@@ -34,7 +34,7 @@ The whole demo (on eCommerce orders) has been recorded during our last #100 Elas
 
 This demo requires a strong Linux instance with (I would say) 12+ GB RAM. I personnaly run it on a MacBook Pro (48GB RAM)...
 
-This demo has been tested on Elastic v9.2.1
+This demo has been tested on Elastic v9.3.3
 
 
 ## Refs
@@ -67,14 +67,14 @@ We will first deploy an Elastic stack using start-local.
 Run this in your terminal:
 
 ```sh
-curl -fsSL https://elastic.co/start-local | sh -s -- -v 9.2.1
+curl -fsSL https://elastic.co/start-local | sh -s -- -v 9.3.3
 ```
 
 Do capture the output of the script, specially the elastic password that you will use to login to Kibana, and also the API key that you may use to also connect to Elasticsearch.
 Let's record your API key (from the start-local output):
 
 ```sh
-export ES_API_KEY="dE9NM3Rab0Jyd3dRa3FnRzJzZUg6TmdhdGJmRWZoMHJSekVKR3hleWdFUQ=="
+export ES_API_KEY="a1VhVWhwMEJXRGE3VUo5dDBlVnE6VlYwQmV5UWNqdTNua2liclVpUDNVUQ=="
 ```
 
 ### Setup a local LLM
@@ -122,8 +122,8 @@ Connectors are handled by Kibana, which in our case, is executed inside a contai
 
 Note: the connector is expecting an API Key configured to work. Ollama doesn't provide this feature so you can enter a random string and save the connector.
 
-Go to Kibana > Stack Management > Connectors > Create connector > OpenAI
-
+Let's [open Kibana](http://localhost:5601/) and connect with the elastic account (and the password captured earlier).<br/>
+Go to Stack Management > Connectors > Create connector > OpenAI<br/>
 (Do not go for the "AI Connector"! Scroll down to select the "OpenAI" tile)
 
 Configure the connector with this setup:
@@ -144,11 +144,9 @@ Then 'Close' at the buttom of the pane.
 
 ## Get data in!
 
-Let's [open Kibana](http://localhost:5601/) and connect with the elastic account (and the password captured earlier).
-
 We will first load a sample dataset of web logs.
 
-When [opening Kibana](http://localhost:5601/), you will see a Search solutions view. We first need to switch to the classic view to load the dataset. To do so, click on the bottom left icon (gear), then down the menu to "Spaces", and edit the "Default" line to select the Solutions view "Classic". Finally, "Apply changes" at the bottom and update the space.
+When opening Kibana, you will see a Search solutions view. We first need to switch to the classic view to load the dataset. To do so, click on the bottom left icon (gear), then down the menu to "Spaces", and edit the "Default" line to select the Solutions view "Classic". Finally, "Apply changes" at the bottom and update the space.
 
 _Tip_: instead, you can open the dev tools and run:
 
@@ -169,21 +167,18 @@ Now, click the Elastic logo at the top left of the screen, "Try sample data", ex
 
 We will create an agent to explore and analyze the content of these web logs.
 
-### Activate the Agent Builder (tech preview)
+### Activate the Agent Builder (in 9.2)
 
-As the AI Agent Builder is in tech preview in v9.2, we need to enable it first.
-
-Go to the [Kibana advanced settings](http://localhost:5601/app/management/kibana/settings?query=agent), toggle the "Elastic Agent Builder" setting on to enable it, click "Save changed" in the bottom bar, then reload the page as suggested in the tooltip at the bottom right of the screen.
+As the AI Agent Builder is in tech preview in v9.2 and available in the Kibana menu in 9.3.<br/>
+However, if you are in 9.2, you need to enable it first. To do so, go to the [Kibana advanced settings](http://localhost:5601/app/management/kibana/settings?query=agent), toggle the "Elastic Agent Builder" setting on to enable it, click "Save changed" in the bottom bar, then reload the page as suggested in the tooltip at the bottom right of the screen.
 
 Now, go to the [Agents app](http://localhost:5601/app/agent_builder) (in the menu under Elasticsearch in the classic view).
 The agents rely on Tools to run. So we will setup a couple of tools and then configure our agent.
 
-_Tip_: I heard there was a secret Kibana API call to modify advanced settings. Anyone having it, please open an issue!
+### Activate Workflow (in 9.3)
 
-### Optional : Activate Workflow (tech preview)
-
-Elastic has introduce workflow as part of the [keephq acquisition](https://www.elastic.co/blog/elastic-and-keep-join-forces) starting as tech preview as part of the >9.3 release.
-To activate it you need to go to `dev tools` and enter the following command:
+Elastic has introduce workflow as part of the [keephq acquisition](https://www.elastic.co/blog/elastic-and-keep-join-forces) starting as tech preview as part of the 9.3 release.
+To activate it, you can either go to the [Kibana advanced settings](http://localhost:5601/app/management/kibana/settings?query=workflows) and enable the workflows, or you may simply go to `dev tools` and enter the following command:
 
 ```sh
 POST kbn://internal/kibana/settings
@@ -270,13 +265,11 @@ FROM kibana_sample_data_logs
 
 _Analyze IP Reputation Workflow (tech preview)_
 
-Note : For this you will to create an API Key on [AbsueIPDB](https://www.abuseipdb.com/) website and copy paste it in the yml provided below.
+Note: For this you will to create an API Key on [AbuseIPDB](https://www.abuseipdb.com/) website and copy paste it in the yml provided below.
 
-If you've activated workflow, you can create a tool that will be able to analyze the reputation of the IP and attach it to your agent. For this, go to `Workflow` -> `Create a new workflow` and paste the content [provided here](./logs-agent-workflow-1.yml)
+If you've activated workflow, you can create a tool that will be able to analyze the reputation of the IP and attach it to your agent. For this, go to `Workflow` -> `Create a new workflow` and paste the content [provided here](./logs-agent-workflow-1.yml). Replace the AbuseIPDB API key with your key and save it.
 
-And save it.
-
-Now go back to agent, click "Tools" at the bottom left. You will see a predefined list of tools that let you list indices, search and retrieve docs. We will add our own tools.
+Now go back to Agent > Manage tools. You will see a predefined list of tools that let you list indices, search and retrieve docs. We will add our own tools.
 
 Click "New tool" and enter:
 
@@ -296,9 +289,7 @@ Finally click "Save" at the bottom right of the page.
 
 _Create Case Workflow (tech preview)_
 
-If you've activated workflow, you can create a tool that will be able to create a case and attach it to your agent. For this, go to `Workflow` -> `Create a new workflow` and paste the content [provided here](./logs-agent-workflow-2.yml)
-
-And save it.
+If you've activated workflow, you can create a tool that will be able to create a case and attach it to your agent. For this, go to `Workflow` -> `Create a new workflow` and paste the content [provided here](./logs-agent-workflow-2.yml) then save it.
 
 Now go back to agent, click "Tools" at the bottom left. You will see a predefined list of tools that let you list indices, search and retrieve docs. We will add our own tools.
 
@@ -327,7 +318,7 @@ Go back to the [Agents app](http://localhost:5601/app/agent_builder), click "Age
 Enter:
 
 * Agent ID: `logs-agent`
-* Custom instructions: copy the instructions [provided here](./logs-agent-instructions.txt) to have it run in French
+* Custom instructions: copy the instructions, either for a [French-speaking agent](./logs-agent-instructions-fr.md) or an [English-speaking agent](./logs-agent-instructions-en.md)
 * Labels: `logs`
 * Display name: something creative like `Logs investigator`
 * Display description: `Investigating in the logs sample dataset.`
@@ -342,7 +333,16 @@ We are going to create a Business Analyst agent which is dedicated to analyze th
 
 #### Setup the tools
 
-No Tools needed, elastic already provided the necessary tools :-)
+No tools needed, Elastic already provided the necessary tools :-)
+
+However, if you want to try it out, you may play this kind of ES\|QL query in Discover or as a tool:
+```sql
+FROM kibana_sample_data_ecommerce
+| STATS count=COUNT_DISTINCT(customer_id), nb_products=SUM(total_quantity), price=SUM(taxful_total_price) BY geoip.continent_name
+| KEEP geoip.continent_name,nb_products,price,count
+| SORT count DESC
+| LIMIT 10
+```
 
 _Send email Workflow (tech preview)_
 
@@ -380,7 +380,7 @@ Go back to the [Agents app](http://localhost:5601/app/agent_builder), click "Age
 Enter:
 
 * Agent ID: `business_analytics`
-* Custom instructions: copy the instructions [provided here](./business-agent-instructions.txt) to have it run in French
+* Custom instructions: copy the instructions [provided here](./business-agent-instructions.md) to have it run in French
 * Labels: `business`
 * Display name: something creative like `Business Analyst`
 * Display description: `Hello !
@@ -566,7 +566,7 @@ Because Claude desktop only integrates with Sonnet and is limited in its free ve
 
 First, [download](https://www.cherry-ai.com/download) and install Cherry Studio on your computer.
 
-Next, open the settings (gear icon at the bottom left), go to "MCP" in the left menu. Click "Add" and "Quick create" and enter `MCP Elastic local` as Name, leave the `stdio` type, enter `/opt/homebrew/bin/npx` as command and the 4 following lines as arguments:
+Next, open the settings (gear icon at the bottom left), go to "MCP" in the left menu. Click "Add" and "Quick create" and enter `MCP Elastic local` as Name, leave the `stdio` type, enter `/opt/homebrew/bin/npx` as command and the 4 following lines as arguments (with your API key of course!):
 
 ```sh
 mcp-remote
@@ -655,6 +655,7 @@ Finally, you may start using A2A in your own agent development with the [officia
 ## Authors
 
 * **Vincent Maury** - *Initial commit* - [blookot](https://github.com/blookot)
+* **Frédéric Maussion** - *Contributor* - [fred-maussion](https://github.com/fred-maussion)
 
 ## License
 
